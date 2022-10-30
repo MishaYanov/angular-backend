@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt @default(now())
+  id        Int        @id @default(autoincrement())
+  name      String?
+  email     String     @unique
+  password  String
+  idNumber  String     @unique
+  city      String
+  address   String
+  role      String     @default("user")
+  cart      cart[]
+  delivery  delivery[]
+
+  @@map("users")
+}
+
+model carCategory {
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt  @default(now())
+  id        Int       @id @default(autoincrement())
+  name      String
+  products  product[]
+
+  @@map("car_catergories")
+}
+
+model partCategory {
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt  @default(now())
+  id        Int       @id @default(autoincrement())
+  name      String
+  products  product[]
+
+  @@map("part_categories")
+}
+
+model product {
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt  @default(now())
+  id             Int          @id @default(autoincrement())
+  name           String
+  price          Float
+  description    String?
+  image          String?
+  carCategoryId Int
+  partCategoryId Int
+  carCategory   carCategory @relation(fields: [carCategoryId], references: [id])
+  partCategory   partCategory @relation(fields: [partCategoryId], references: [id])
+  cartItems      cartItem[]
+
+  @@map("products")
+}
+
+model cartItem {
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt  @default(now())
+  id         Int      @id @default(autoincrement())
+  quantity   Int
+  totalPrice Float   
+  productId  Int
+  cartId     Int
+  cart       cart     @relation(fields: [cartId], references: [id])
+  product    product  @relation(fields: [productId], references: [id])
+
+  @@map("cart_items")
+}
+
+model cart {
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt  @default(now())
+  id        Int        @id @default(autoincrement())
+  userId    Int
+  user      user       @relation(fields: [userId], references: [id])
+  cartItems cartItem[]
+  delivery  delivery[]
+
+  @@map("carts")
+}
+
+model delivery {
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt  @default(now())
+  id        Int      @id @default(autoincrement())
+  price     Float
+  city      String
+  address   String
+  userId    Int
+  cartId    Int
+  cart      cart     @relation(fields: [cartId], references: [id])
+  user      user     @relation(fields: [userId], references: [id])
+
+  @@map("deliveries")
+}
