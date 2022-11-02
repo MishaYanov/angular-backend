@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { cartDto, CartItemDto, DeliveryDto } from './cartDto';
 import { JwtService } from '@nestjs/jwt/dist';
 import { CartModule } from './cart.module';
+import { response } from 'express';
 
 @Injectable()
 export class CartService {
@@ -152,6 +153,13 @@ export class CartService {
       }
     }
   }
+
+  /**
+   * sub funnction for the update car, updating all the cart items.
+   * @param newCartItems 
+   * @param oldCartItems 
+   * @returns boolean value/error
+   */
   updateCartItems(newCartItems: CartItemDto[], oldCartItems: any) {
     try {
       newCartItems.forEach(async (cartItem) => {
@@ -186,6 +194,11 @@ export class CartService {
     }
   }
 
+  /**
+   *    * sub funnction for the updatee car, updating the delivery.
+   * @param delivery 
+   * @returns 
+   */
   async updateDelivery(delivery: DeliveryDto) {
     try {
       //check if already registered delivery
@@ -198,6 +211,8 @@ export class CartService {
             price: delivery.price,
             address: delivery.address,
             city: delivery.city,
+            userId: delivery.userId,
+            cartId: delivery.cartId
           },
         });
       } else {
@@ -246,6 +261,62 @@ export class CartService {
       throw new ForbiddenException(
         'Cart item not deleted reason:' + err.message,
       );
+    }
+  }
+
+  async removeDelivery(userId: any){
+    //find cart
+    let cart: cartDto;
+    try {
+      cart = await this.prisma.cart.findFirst({
+        where: {
+          userId: parseInt(userId),
+        },
+        select:{
+          id: true,
+          delivery: {
+            select: {
+              id: true,
+            }
+          }
+        }
+      });
+      if(cart.delivery.length != 0){
+        const response = await this.prisma.delivery.delete({
+          where:{
+            id: cart.id
+          }
+        });
+        return response;
+      }
+    } catch (err) {
+      throw new ForbiddenException('Cart or Delivery not found reason:'+err.message);
+    }
+  }
+
+  async deleteCart(userId: any) {
+    //find cart
+    let cart: cartDto;
+    try{
+      cart = await this.prisma.cart.findFirst({
+        where: {
+          userId: parseInt(userId),
+        },
+      });
+    }catch(err){
+      throw new ForbiddenException('Cart not found reson:'+err.message);
+    }
+    if(cart){
+      try{
+        const response = await this.prisma.cart.delete({
+          where: {
+            id: cart.id
+          }
+      });
+        return response;
+      }catch(err){
+        throw new ForbiddenException('failed to relete cart, reason: '+err.message);
+      }
     }
   }
 

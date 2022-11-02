@@ -17,9 +17,9 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    // ServeStaticModule.forRoot({
-    //   rootPath: __dirname + '../public/images',
-    // }),
+    ServeStaticModule.forRoot({
+      rootPath: __dirname + '../public/images',
+    }),
   ],
   controllers: [],
   providers: [],

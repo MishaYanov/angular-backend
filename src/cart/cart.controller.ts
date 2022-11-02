@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, HttpCode, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, Patch, PipeTransform, Post, Put, UseGuards } from '@nestjs/common';
 import {
   Body,
   Param,
@@ -6,11 +6,12 @@ import {
 import { JwtGuard } from 'src/auth/guard/jwt.guard';
 import { CartService } from './cart.service';
 import { cartDto } from './cartDto';
+import { PdfServiceService } from './pdf-service.service';
 
 @UseGuards(JwtGuard)
 @Controller('cart')
 export class CartController {
-  constructor(private cartService: CartService) {}
+  constructor(private cartService: CartService, private pdfBuilder: PdfServiceService) {}
   @Get('/:id')
   async getCartByUserId(@Param('id') id: number) {
     try {
@@ -65,17 +66,39 @@ export class CartController {
     }
   }
 
-  @Delete('/:id')
-  deleteCart(dto: cartDto) {}
-  @Post('/delivery')
-  submitDelivery() {}
-  @Delete('/delivery/:id')
-  removeDelivery() {}
-  @Post('/submit')
-  finalizeSale() {
+  @Delete('/:userId')
+  deleteCart(@Param('userId') id: number) {
+    try {
+      if(id >= 0){
+        const response = this.cartService.deleteCart(id);
+        return response;
+      }else{
+        throw new Error('This a wrong id no one can have such number!')
+      }
+    } catch (err) {
+      throw new Error('Somthing bad happened when deleting your cart'+ err.message);
+    }
+  }
+  
+  @Delete('/delivery/:userId')
+  removeDelivery(@Param('userId') id: number) {
+    try {
+      if(id >= 0){
+        const response = this.cartService.removeDelivery(id);
+      }else{
+        throw new Error('This a wrong id no one can have such number!')
+      }
+    } catch (error) {
+      
+    }
+
+  }
+  @Post('/submit/:id')
+  finalizeSale(@Param('id') id:number,@Body() cart: cartDto)  {
     //send receipt to email
+    // this.pdf
     //delete cart
-    //save sale to history
+    this.cartService.deleteCart(id)
   }
   @Get('/history/:id')
   getHistory() {}
