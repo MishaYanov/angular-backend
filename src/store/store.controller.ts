@@ -18,7 +18,7 @@ import { itemDto } from './dto/item.dto';
 import { StoreService } from './store.service';
 
 //jwt guard will be implemented here
-// @UseGuards(JwtGuard)
+@UseGuards(JwtGuard)
 @Controller('store')
 export class StoreController {
   constructor(private storeService: StoreService) {}
