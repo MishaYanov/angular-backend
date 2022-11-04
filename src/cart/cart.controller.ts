@@ -18,7 +18,7 @@ export class CartController {
       const cart = await this.cartService.getCartByUserId(id);
       return cart;
     } catch {
-      return 'null';
+      return null;
     }
   }
 
@@ -36,10 +36,8 @@ export class CartController {
   @Put('/:id')
   async updateCart(@Param('id') id:any, @Body() newCart: any) {
     try {      
-      console.log(newCart)
       const response = await this.cartService.updateCart(id, newCart);
       if(response){
-        console.log(response);
         return response;
       }else{
         return HttpCode(400);
@@ -53,7 +51,6 @@ export class CartController {
   async deleteCartItem(@Param('cart') cartId: number, @Param('cartitemid') cartiItemId: number) {
     try {
       if(cartId && cartiItemId){
-        console.log(cartId, cartiItemId);
       const response = await this.cartService.deleteCartItem(cartId, cartiItemId);
       if(response){
         return {msg:'Item deleted'};
