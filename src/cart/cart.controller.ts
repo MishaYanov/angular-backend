@@ -18,7 +18,7 @@ export class CartController {
       const cart = await this.cartService.getCartByUserId(id);
       return cart;
     } catch {
-      return 'null';
+      return null;
     }
   }
 
@@ -36,7 +36,6 @@ export class CartController {
   @Put('/:id')
   async updateCart(@Param('id') id:any, @Body() newCart: any) {
     try {      
-      console.log(newCart);
       const response = await this.cartService.updateCart(id, newCart);
       if(response){
         return response;

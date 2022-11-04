@@ -12,16 +12,19 @@ import {
   ParseFilePipeBuilder,
   HttpStatus,
 } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
 import { FileInterceptor, MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 import { JwtGuard } from 'src/auth/guard';
 import { itemDto } from './dto/item.dto';
 import { StoreService } from './store.service';
+import { UploadService } from './upload.service';
 
 //jwt guard will be implemented here
 @UseGuards(JwtGuard)
 @Controller('store')
 export class StoreController {
-  constructor(private storeService: StoreService) {}
+  constructor(private storeService: StoreService, private upload: UploadService) {}
 
   //get all itmes
   @Get()
@@ -40,6 +43,7 @@ export class StoreController {
   //delete item
   @Delete(':id')
   deleteItem(@Param('id') id: number) {
+    console.log(id);
     return this.storeService.deleteItem(id);
   }
   @Get('car/categories')
@@ -53,26 +57,21 @@ export class StoreController {
 
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  uploadFile(
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addFileTypeValidator({
-          fileType: /\.(gif|jpe?g|tiff?|png|webp|bmp)$/i,
-        })
-        .addMaxSizeValidator({
-          maxSize: 10000,
-        })
-        .build({
-          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        }),
-    )
-    file: Express.Multer.File,
-  ) {
-    console.log(file);  
-    console.log(__dirname);
-    MulterModule.register({
-        dest: __dirname + '../public/images',
-      });
-  }
+  @UseInterceptors(FileInterceptor('file',{
+    storage: diskStorage({
+      destination: __dirname + '/../../public/images',
+      filename: (req, file, cb) => {
+        const filename = uuidv4();
+        const extension = file.originalname.split('.')[1];
+        cb(null, `${filename}.${extension}`);
+      }
+    }),
+  }))
+  async uploadFile(@Body() body:any, @UploadedFile() file: Express.Multer.File) {
+    console.log(file);
+    console.log(file.destination);
+    return {file: file.filename};
+  }  
 }
+
+
