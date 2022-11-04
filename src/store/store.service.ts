@@ -95,13 +95,14 @@ export class StoreService {
         }
         
     }
-    async deleteItem(id: number){
+    async deleteItem(id: any){
         try{
             const deletedItem = await this.prisma.product.delete({
                 where: {
-                    id: id,
+                    id: parseInt(id),
                 }
             });
+            console.log(deletedItem);
             return deletedItem;
         }catch(error){
             throw new Error("Something went wrong: " + error.message);
@@ -113,4 +114,5 @@ export class StoreService {
     async getAllCarCategories(){
         return await this.prisma.carCategory.findMany();
     }
+    
 }

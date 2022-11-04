@@ -6,6 +6,7 @@ import { StoreModule } from './store/store.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -18,8 +19,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
       isGlobal: true,
     }),
     ServeStaticModule.forRoot({
-      rootPath: __dirname + '../public/images',
-    }),
+      rootPath: join(__dirname, '..', 'public'),
+  }),
   ],
   controllers: [],
   providers: [],
