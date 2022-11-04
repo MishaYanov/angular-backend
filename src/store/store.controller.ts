@@ -30,13 +30,11 @@ export class StoreController {
   }
   @Post()
   addItem(@Body() newItem: itemDto) {
-    console.log(newItem);
     return this.storeService.addItem(newItem);
   }
   //update item
   @Put(':id')
   updateItem(@Body() newItem: itemDto) {
-    console.log(newItem);
     return this.storeService.updateItem(newItem);
   }
   //delete item
@@ -52,13 +50,15 @@ export class StoreController {
   async getPartCategories() {
     return this.storeService.getAllPartCategories();
   }
+
+
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   uploadFile(
     @UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
-          fileType: '/\.(gif|jpe?g|tiff?|png|webp|bmp)$/i',
+          fileType: /\.(gif|jpe?g|tiff?|png|webp|bmp)$/i,
         })
         .addMaxSizeValidator({
           maxSize: 10000,
