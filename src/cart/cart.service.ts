@@ -130,6 +130,7 @@ export class CartService {
         deliveryFlag: boolean = true;
       const cartItems = newCart.cartItems;
       const delivery = newCart.delivery;
+      console.log(delivery);
       
       try {
         if (cartItems && cartItems.length > 0 ) {
@@ -140,6 +141,8 @@ export class CartService {
       }
       try {
         if (delivery && delivery.length > 0) {
+          debugger
+          console.log(delivery);
           deliveryFlag = await this.updateDelivery(delivery);
         }
       } catch (err) {

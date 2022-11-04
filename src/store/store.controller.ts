@@ -54,6 +54,8 @@ export class StoreController {
   async getPartCategories() {
     return this.storeService.getAllPartCategories();
   }
+
+
   @Post('upload')
   @UseInterceptors(FileInterceptor('file',{
     storage: diskStorage({
