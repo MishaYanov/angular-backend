@@ -58,7 +58,7 @@ CREATE TABLE "cart_items" (
     "totalPrice" DOUBLE PRECISION NOT NULL,
     "productId" INTEGER NOT NULL,
     "cartId" INTEGER NOT NULL,
-
+    
     CONSTRAINT "cart_items_pkey" PRIMARY KEY ("id")
 );
 

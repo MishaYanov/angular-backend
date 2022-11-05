@@ -34,7 +34,8 @@ export class CartController {
 
   @HttpCode(200)
   @Put('/:id')
-  async updateCart(@Param('id') id:any, @Body() newCart: any) {
+  async updateCart(@Param('id') id:any, @Body() newCart: any) {  
+    console.log(newCart);
     try {      
       const response = await this.cartService.updateCart(id, newCart);
       if(response){

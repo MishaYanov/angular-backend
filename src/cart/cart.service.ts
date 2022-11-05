@@ -130,16 +130,19 @@ export class CartService {
         deliveryFlag: boolean = true;
       const cartItems = newCart.cartItems;
       const delivery = newCart.delivery;
+      console.log(delivery);
       
       try {
-        if (cartItems && cartItems.length > 0 ) {
-          itemsFlag = this.updateCartItems(cartItems, cart.cartItems);
+        if (cartItems && cartItems.length >= 0 ) {
+          itemsFlag = await this.updateCartItems(cartItems, cart.cartItems);
         }
       } catch (err) {
         throw new ForbiddenException('Cart items not updated, reason:' + err);
       }
       try {
-        if (delivery && delivery.length > 0) {
+        if (delivery) {
+          console.log('delivery', delivery);
+          
           deliveryFlag = await this.updateDelivery(delivery);
         }
       } catch (err) {
@@ -147,25 +150,24 @@ export class CartService {
       }
 
       if (itemsFlag === true && deliveryFlag === true && CartService.updateBreaker === false) {
-        return await this.getCartByUserId(cart.userId);
+        const updatedCart = await this.getCartByUserId(id);        
+        return updatedCart;
       } else {
         throw new ForbiddenException('Cart not updated');
       }
     }
   }
-
   /**
    * sub funnction for the update car, updating all the cart items.
    * @param newCartItems 
    * @param oldCartItems 
    * @returns boolean value/error
    */
-  updateCartItems(newCartItems: CartItemDto[], oldCartItems: any) {
+  async updateCartItems(newCartItems: CartItemDto[], oldCartItems: any) {
     try {
       newCartItems.forEach(async (cartItem) => {
-        //check if already registered product
-        debugger;
-        if (cartItem.id && oldCartItems.find((item:any) => item.id === cartItem.id)) {
+        //check if already registered product;
+        if (cartItem.id && oldCartItems.find((item:any) => item.id == cartItem.id)) {
           await this.prisma.cartItem.update({
             where: {
               id: cartItem.id,
@@ -176,6 +178,16 @@ export class CartService {
             },
           });
         } else {
+          //cath if item is already registered
+          const product = await this.prisma.cartItem.findFirst({
+            where: {
+              productId: cartItem.productId,
+            }
+          });
+          if (product) {
+
+            return;
+          }
           //create new product
           await this.prisma.cartItem.create({
             data: {
@@ -202,10 +214,15 @@ export class CartService {
   async updateDelivery(delivery: DeliveryDto) {
     try {
       //check if already registered delivery
-      if (delivery.id) {
+      const deliveryExist = await this.prisma.delivery.findFirst({
+        where: {
+          userId: delivery.userId,
+        },
+      });
+      if (deliveryExist) {
         await this.prisma.delivery.update({
           where: {
-            id: delivery.id,
+            id: deliveryExist.id,
           },
           data: {
             price: delivery.price,

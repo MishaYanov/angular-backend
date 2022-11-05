@@ -43,7 +43,6 @@ export class StoreController {
   //delete item
   @Delete(':id')
   deleteItem(@Param('id') id: number) {
-    console.log(id);
     return this.storeService.deleteItem(id);
   }
   @Get('car/categories')
