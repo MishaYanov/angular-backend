@@ -1,10 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config/dist/config.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { cartDto, CartItemDto, DeliveryDto } from './cartDto';
-import { JwtService } from '@nestjs/jwt/dist';
-import { CartModule } from './cart.module';
-import { response } from 'express';
+
 
 @Injectable()
 export class CartService {
@@ -15,13 +12,13 @@ export class CartService {
   /**
    * This function is used to get the cart details of the user
    *
-   * @param id
+   * @param userId
    * @returns cart
    */
-  async getCartByUserId(id: any) {
+  async getCartByUserId(userId: any) {
     const cart: cartDto = await this.prisma.cart.findFirst({
       where: {
-        userId: parseInt(id),
+        userId: parseInt(userId),
       },
       select: {
         id: true,
@@ -103,7 +100,7 @@ export class CartService {
   async updateCart(id: any, newCart: cartDto) {
     const cart = await this.prisma.cart.findFirst({
       where: {
-        id: parseInt(id),
+        userId: parseInt(id),
       },
       select: {
         id: true,
@@ -126,49 +123,45 @@ export class CartService {
     if (!cart) {
       throw new ForbiddenException('Cart not found');
     } else {
-      let itemsFlag: boolean,
-        deliveryFlag: boolean = true;
       const cartItems = newCart.cartItems;
       const delivery = newCart.delivery;
       console.log(delivery);
       
       try {
-        if (cartItems && cartItems.length > 0 ) {
-          itemsFlag = this.updateCartItems(cartItems, cart.cartItems);
+        if (cartItems && cartItems.length >= 0 ) {
+          await this.updateCartItems(cartItems, cart.cartItems);
         }
       } catch (err) {
         throw new ForbiddenException('Cart items not updated, reason:' + err);
       }
       try {
-        if (delivery && delivery.length > 0) {
-          debugger
-          console.log(delivery);
-          deliveryFlag = await this.updateDelivery(delivery);
+        if (delivery.length != 0) {
+          console.log('delivery', delivery);
+          
+          await this.updateDelivery(delivery);
         }
       } catch (err) {
         throw new ForbiddenException('Delivery not updated, reason:' + err);
       }
 
-      if (itemsFlag === true && deliveryFlag === true && CartService.updateBreaker === false) {
-        return await this.getCartByUserId(cart.userId);
+      if (CartService.updateBreaker === false) {        
+        return true;
       } else {
         throw new ForbiddenException('Cart not updated');
       }
     }
   }
-
   /**
    * sub funnction for the update car, updating all the cart items.
    * @param newCartItems 
    * @param oldCartItems 
    * @returns boolean value/error
    */
-  updateCartItems(newCartItems: CartItemDto[], oldCartItems: any) {
+  async updateCartItems(newCartItems: CartItemDto[], oldCartItems: any) {
     try {
       newCartItems.forEach(async (cartItem) => {
-        //check if already registered product
-        debugger;
-        if (cartItem.id && oldCartItems.find((item:any) => item.id === cartItem.id)) {
+        //check if already registered product;
+        if (cartItem.id && oldCartItems.find((item:any) => item.id == cartItem.id)) {
           await this.prisma.cartItem.update({
             where: {
               id: cartItem.id,
@@ -179,6 +172,16 @@ export class CartService {
             },
           });
         } else {
+          //cacth if item is already registered
+          const product = await this.prisma.cartItem.findFirst({
+            where: {
+              cartId: cartItem.cartId,
+              productId: cartItem.productId,
+            }
+          });
+          if (product) {
+            return;
+          }
           //create new product
           await this.prisma.cartItem.create({
             data: {
@@ -205,10 +208,15 @@ export class CartService {
   async updateDelivery(delivery: DeliveryDto) {
     try {
       //check if already registered delivery
-      if (delivery.id) {
+      const deliveryExist = await this.prisma.delivery.findFirst({
+        where: {
+          userId: delivery.userId,
+        },
+      });
+      if (deliveryExist) {
         await this.prisma.delivery.update({
           where: {
-            id: delivery.id,
+            id: deliveryExist.id,
           },
           data: {
             price: delivery.price,
@@ -220,6 +228,7 @@ export class CartService {
         });
       } else {
         //create new delivery
+        if(delivery && delivery.price && delivery.address && delivery.city && delivery.userId && delivery.cartId){
         await this.prisma.delivery.create({
           data: {
             userId: delivery.userId,
@@ -231,6 +240,7 @@ export class CartService {
         });
       }
       return true;
+    }
     } catch (err) {
       CartService.updateBreaker = true;
       throw new ForbiddenException('Delivery not updated, reason:' + err);

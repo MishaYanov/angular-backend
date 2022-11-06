@@ -18,13 +18,12 @@ import { diskStorage } from 'multer';
 import { JwtGuard } from 'src/auth/guard';
 import { itemDto } from './dto/item.dto';
 import { StoreService } from './store.service';
-import { UploadService } from './upload.service';
 
 //jwt guard will be implemented here
 @UseGuards(JwtGuard)
 @Controller('store')
 export class StoreController {
-  constructor(private storeService: StoreService, private upload: UploadService) {}
+  constructor(private storeService: StoreService) {}
 
   //get all itmes
   @Get()
@@ -43,7 +42,6 @@ export class StoreController {
   //delete item
   @Delete(':id')
   deleteItem(@Param('id') id: number) {
-    console.log(id);
     return this.storeService.deleteItem(id);
   }
   @Get('car/categories')
@@ -68,8 +66,6 @@ export class StoreController {
     }),
   }))
   async uploadFile(@Body() body:any, @UploadedFile() file: Express.Multer.File) {
-    console.log(file);
-    console.log(file.destination);
     return {file: file.filename};
   }  
 }

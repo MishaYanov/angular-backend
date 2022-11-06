@@ -23,9 +23,9 @@ export class CartController {
   }
 
   @Post('/:id')
-  async createCart(@Param('id') id: number) {
+  async createCart(@Param('id') userId: number) {
     try {
-      const cart = await this.cartService.createCart(id);
+      const cart = await this.cartService.createCart(userId);
       return cart;
     } catch {
       return null;
@@ -34,13 +34,18 @@ export class CartController {
 
   @HttpCode(200)
   @Put('/:id')
-  async updateCart(@Param('id') id:any, @Body() newCart: any) {
+  async updateCart(@Param('id') id:any, @Body() newCart: any) {  
+    console.log(id, newCart);
     try {      
-      const response = await this.cartService.updateCart(id, newCart);
+      const response = await this.cartService.updateCart(id, newCart).then((res) => {
+        console.log(res);
+        if(res){
+          return {msg:'Cart updated'};
+        }
+      });
+      console.log(response);
       if(response){
-        return response;
-      }else{
-        return HttpCode(400);
+        return {msg:'Cart updated'};
       }
     } catch (err){
       throw new Error(err.message);
