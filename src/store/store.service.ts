@@ -102,7 +102,6 @@ export class StoreService {
                     id: parseInt(id),
                 }
             });
-            console.log(deletedItem);
             return deletedItem;
         }catch(error){
             throw new Error("Something went wrong: " + error.message);

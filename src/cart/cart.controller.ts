@@ -35,15 +35,12 @@ export class CartController {
   @HttpCode(200)
   @Put('/:id')
   async updateCart(@Param('id') id:any, @Body() newCart: any) {  
-    console.log(id, newCart);
     try {      
       const response = await this.cartService.updateCart(id, newCart).then((res) => {
-        console.log(res);
         if(res){
           return {msg:'Cart updated'};
         }
       });
-      console.log(response);
       if(response){
         return {msg:'Cart updated'};
       }
