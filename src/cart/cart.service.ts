@@ -1,10 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config/dist/config.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { cartDto, CartItemDto, DeliveryDto } from './cartDto';
-import { JwtService } from '@nestjs/jwt/dist';
-import { CartModule } from './cart.module';
-import { response } from 'express';
+
 
 @Injectable()
 export class CartService {
@@ -15,13 +12,13 @@ export class CartService {
   /**
    * This function is used to get the cart details of the user
    *
-   * @param id
+   * @param userId
    * @returns cart
    */
-  async getCartByUserId(id: any) {
+  async getCartByUserId(userId: any) {
     const cart: cartDto = await this.prisma.cart.findFirst({
       where: {
-        userId: parseInt(id),
+        userId: parseInt(userId),
       },
       select: {
         id: true,
@@ -103,7 +100,7 @@ export class CartService {
   async updateCart(id: any, newCart: cartDto) {
     const cart = await this.prisma.cart.findFirst({
       where: {
-        id: parseInt(id),
+        userId: parseInt(id),
       },
       select: {
         id: true,
@@ -126,32 +123,29 @@ export class CartService {
     if (!cart) {
       throw new ForbiddenException('Cart not found');
     } else {
-      let itemsFlag: boolean,
-        deliveryFlag: boolean = true;
       const cartItems = newCart.cartItems;
       const delivery = newCart.delivery;
       console.log(delivery);
       
       try {
         if (cartItems && cartItems.length >= 0 ) {
-          itemsFlag = await this.updateCartItems(cartItems, cart.cartItems);
+          await this.updateCartItems(cartItems, cart.cartItems);
         }
       } catch (err) {
         throw new ForbiddenException('Cart items not updated, reason:' + err);
       }
       try {
-        if (delivery) {
+        if (delivery.length != 0) {
           console.log('delivery', delivery);
           
-          deliveryFlag = await this.updateDelivery(delivery);
+          await this.updateDelivery(delivery);
         }
       } catch (err) {
         throw new ForbiddenException('Delivery not updated, reason:' + err);
       }
 
-      if (itemsFlag === true && deliveryFlag === true && CartService.updateBreaker === false) {
-        const updatedCart = await this.getCartByUserId(id);        
-        return updatedCart;
+      if (CartService.updateBreaker === false) {        
+        return true;
       } else {
         throw new ForbiddenException('Cart not updated');
       }
@@ -178,14 +172,14 @@ export class CartService {
             },
           });
         } else {
-          //cath if item is already registered
+          //cacth if item is already registered
           const product = await this.prisma.cartItem.findFirst({
             where: {
+              cartId: cartItem.cartId,
               productId: cartItem.productId,
             }
           });
           if (product) {
-
             return;
           }
           //create new product
@@ -234,6 +228,7 @@ export class CartService {
         });
       } else {
         //create new delivery
+        if(delivery && delivery.price && delivery.address && delivery.city && delivery.userId && delivery.cartId){
         await this.prisma.delivery.create({
           data: {
             userId: delivery.userId,
@@ -245,6 +240,7 @@ export class CartService {
         });
       }
       return true;
+    }
     } catch (err) {
       CartService.updateBreaker = true;
       throw new ForbiddenException('Delivery not updated, reason:' + err);
