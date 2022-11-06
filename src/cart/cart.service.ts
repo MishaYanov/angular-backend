@@ -5,8 +5,8 @@ import { cartDto, CartItemDto, DeliveryDto } from './cartDto';
 
 @Injectable()
 export class CartService {
-  constructor(private prisma: PrismaService) {}
-  private static updateBreaker:boolean = false;
+  constructor(private prisma: PrismaService) { }
+  private static updateBreaker: boolean = false;
   //needs a validation
 
   /**
@@ -125,10 +125,8 @@ export class CartService {
     } else {
       const cartItems = newCart.cartItems;
       const delivery = newCart.delivery;
-      console.log(delivery);
-      
       try {
-        if (cartItems && cartItems.length >= 0 ) {
+        if (cartItems && cartItems.length >= 0) {
           await this.updateCartItems(cartItems, cart.cartItems);
         }
       } catch (err) {
@@ -136,15 +134,13 @@ export class CartService {
       }
       try {
         if (delivery.length != 0) {
-          console.log('delivery', delivery);
-          
           await this.updateDelivery(delivery);
         }
       } catch (err) {
         throw new ForbiddenException('Delivery not updated, reason:' + err);
       }
 
-      if (CartService.updateBreaker === false) {        
+      if (CartService.updateBreaker === false) {
         return true;
       } else {
         throw new ForbiddenException('Cart not updated');
@@ -161,7 +157,7 @@ export class CartService {
     try {
       newCartItems.forEach(async (cartItem) => {
         //check if already registered product;
-        if (cartItem.id && oldCartItems.find((item:any) => item.id == cartItem.id)) {
+        if (cartItem.id && oldCartItems.find((item: any) => item.id == cartItem.id)) {
           await this.prisma.cartItem.update({
             where: {
               id: cartItem.id,
@@ -228,19 +224,19 @@ export class CartService {
         });
       } else {
         //create new delivery
-        if(delivery && delivery.price && delivery.address && delivery.city && delivery.userId && delivery.cartId){
-        await this.prisma.delivery.create({
-          data: {
-            userId: delivery.userId,
-            cartId: delivery.cartId,
-            price: delivery.price,
-            address: delivery.address,
-            city: delivery.city,
-          },
-        });
+        if (delivery && delivery.price && delivery.address && delivery.city && delivery.userId && delivery.cartId) {
+          await this.prisma.delivery.create({
+            data: {
+              userId: delivery.userId,
+              cartId: delivery.cartId,
+              price: delivery.price,
+              address: delivery.address,
+              city: delivery.city,
+            },
+          });
+        }
+        return true;
       }
-      return true;
-    }
     } catch (err) {
       CartService.updateBreaker = true;
       throw new ForbiddenException('Delivery not updated, reason:' + err);
@@ -277,7 +273,7 @@ export class CartService {
     }
   }
 
-  async removeDelivery(userId: any){
+  async removeDelivery(userId: any) {
     //find cart
     let cart: cartDto;
     try {
@@ -285,7 +281,7 @@ export class CartService {
         where: {
           userId: parseInt(userId),
         },
-        select:{
+        select: {
           id: true,
           delivery: {
             select: {
@@ -294,41 +290,41 @@ export class CartService {
           }
         }
       });
-      if(cart.delivery.length != 0){
+      if (cart.delivery.length != 0) {
         const response = await this.prisma.delivery.delete({
-          where:{
+          where: {
             id: cart.id
           }
         });
         return response;
       }
     } catch (err) {
-      throw new ForbiddenException('Cart or Delivery not found reason:'+err.message);
+      throw new ForbiddenException('Cart or Delivery not found reason:' + err.message);
     }
   }
 
   async deleteCart(userId: any) {
     //find cart
     let cart: cartDto;
-    try{
+    try {
       cart = await this.prisma.cart.findFirst({
         where: {
           userId: parseInt(userId),
         },
       });
-    }catch(err){
-      throw new ForbiddenException('Cart not found reson:'+err.message);
+    } catch (err) {
+      throw new ForbiddenException('Cart not found reson:' + err.message);
     }
-    if(cart){
-      try{
+    if (cart) {
+      try {
         const response = await this.prisma.cart.delete({
           where: {
             id: cart.id
           }
-      });
+        });
         return response;
-      }catch(err){
-        throw new ForbiddenException('failed to relete cart, reason: '+err.message);
+      } catch (err) {
+        throw new ForbiddenException('failed to relete cart, reason: ' + err.message);
       }
     }
   }
